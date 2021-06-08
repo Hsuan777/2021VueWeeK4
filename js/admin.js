@@ -32,6 +32,9 @@ const App = Vue.createApp({
         article: {
           tag:[],
         },
+        order: {
+          title: ''
+        },
         productPages: 0,
         currentPage: 1,
         modal: ''
@@ -301,7 +304,7 @@ const App = Vue.createApp({
           case '訂單':
             this.currentTab.name = item;
             // 加進去會有問題
-            // this.currentTab.enName = 'order';
+            this.currentTab.enName = 'order';
             this.displayData.products = false;
             this.displayData.orders = true;
             this.displayData.coupons = false;
@@ -388,21 +391,42 @@ const App = Vue.createApp({
     },
     openDeleteModal(item) {
       this.tempData[this.currentTab.enName] = {...item};
+      if (this.currentTab.enName === 'order') {
+        this.tempData.order.title = this.tempData.order.user.name;
+      }
       this.tempData.modal = new bootstrap.Modal(document.getElementById('deleteModal'));
       this.tempData.modal.show();
     },
     deleteData() {
-      switch (this.currentTab.name) {
-        case '商品':
-          this.deleteProduct(this.tempData[this.currentTab.enName].id);
-          break;
-        case '優惠券':
-          this.deleteCoupon(this.tempData[this.currentTab.enName].id);
-          break;
-        case '文章':
-          this.deleteArticle(this.tempData[this.currentTab.enName].id);
-          break;
-      }
+      const id = this.tempData[this.currentTab.enName].id;
+      const apiUrl = `${this.url}/api/${this.path}/admin/${this.currentTab.enName}/${id}`;
+      this.loading = true;
+      axios.delete(apiUrl).then(res => {
+        if (res.data.success) {
+          this.loading = false;
+          this.tempData.modal.hide();
+          this.getProducts();
+          this.getOrders();
+          this.getCoupons();
+          this.getArticles();
+        } else {
+          alert(res.data.message);
+        }
+      }).catch(res => {
+        alert('無法刪除資料喔～快去看什麼問題吧！')
+        console.log(res.data);
+      })
+      // switch (this.currentTab.name) {
+      //   case '商品':
+      //     this.deleteProduct(this.tempData[this.currentTab.enName].id);
+      //     break;
+      //   case '優惠券':
+      //     this.deleteCoupon(this.tempData[this.currentTab.enName].id);
+      //     break;
+      //   case '文章':
+      //     this.deleteArticle(this.tempData[this.currentTab.enName].id);
+      //     break;
+      // }
     },
   },
   components:{
